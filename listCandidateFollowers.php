@@ -51,24 +51,24 @@ if (count($argv) <= 1) {
             file_put_contents($tempCountFile, $followerCount . PHP_EOL, FILE_APPEND);
 
             $lastCount = $tempCountArray[$position];
-            $twitterUpdate .= '@' . $candidate;
+//            $twitterUpdate .= '@' . $candidate;
+            $twitterUpdate .= '' . $candidate;
             if ($followerCount > $lastCount) {
-                //they have more
                 $change = $followerCount - $lastCount;
-                $twitterUpdate .= ' gained ' . number_format($change);
+                $percentChange = ($change / $followerCount) * 100;
+                $twitterUpdate .= ' gained ' . number_format($change) . ' Twitter followers in the last hour, for a ' . number_format($percentChange, 4) . '% increase,';
+                $twitterUpdate .= ' with a current count of ' . number_format($followerCount) . ' followers.' . PHP_EOL;
             } else if ($followerCount < $lastCount) {
-                //they have less
                 $change = $lastCount - $followerCount;
-                $twitterUpdate .= ' lost ' . number_format($change);
+                $percentChange = ($change / $followerCount) * 100;
+                $twitterUpdate .= ' lost ' . number_format($change) . ' Twitter followers in the last hour, for a ' . number_format($percentChange, 4) . '% decrease,';
+                $twitterUpdate .= ' with a current count of ' . number_format($followerCount) . ' followers.' . PHP_EOL;
             } else if ($followerCount == $lastCount) {
-                //they did not change
-                $twitterUpdate .= ' remained at ' . number_format($followerCount);
+                $twitterUpdate .= ' remained at ' . number_format($followerCount) . ' Twitter followers for the last hour.' . PHP_EOL;
             }
-            $twitterUpdate .= ' Twitter followers in the last hour, for a current count of ' . number_format($followerCount) . ' followers.' . PHP_EOL;
-
-            $this->_logger->info('Tweeting this: ' . $twitterUpdate);
 
             if ($rowCount == 2) {
+                $twitterUpdate .= '#2020election';
                 array_push($statusArray, $twitterUpdate);
                 $twitterUpdate = '';
                 $rowCount = 0;
@@ -122,7 +122,7 @@ class listCandidateFollowers
 
 	public function sendTweet($status)
     {
-        $this->_logger->info('Tweeting this: ' . $status);
+        $this->_logger->info('Tweeting this:' . PHP_EOL . $status);
 
         $tweet = array(
             'status' => $status

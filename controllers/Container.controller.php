@@ -47,8 +47,8 @@ class Container
 			return self::$shared['mysqlDBConnect'];
 		}
 
-		global $earthquakesDBLogin;
-		$mysqlDBConnect = new MySQLConnect($earthquakesDBLogin['server'], $earthquakesDBLogin['username'], $earthquakesDBLogin['password'], $earthquakesDBLogin['database']);
+		global $followersDBLogin;
+		$mysqlDBConnect = new MySQLConnect($followersDBLogin['server'], $followersDBLogin['username'], $followersDBLogin['password'], $followersDBLogin['database']);
 		$mysqlConnection = $mysqlDBConnect->db;
 
 		return self::$shared['mysqlDBConnect'] = $mysqlConnection;
