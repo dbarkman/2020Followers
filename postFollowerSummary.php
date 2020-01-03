@@ -60,12 +60,9 @@ class postFollowerSummary
                 $twitterUpdate .= ' remained at ' . number_format($followerCount) . ' Twitter followers for the last ' . $time . '.' . PHP_EOL;
             }
 
-            if ($rowCount == 2) {
-                $twitterUpdate .= '#2020election';
-                array_push($statusArray, $twitterUpdate);
-                $twitterUpdate = '';
-                $rowCount = 0;
-            }
+            $twitterUpdate .= '#2020election';
+            array_push($statusArray, $twitterUpdate);
+            $twitterUpdate = '';
         }
 
         foreach ($statusArray as $status) {
