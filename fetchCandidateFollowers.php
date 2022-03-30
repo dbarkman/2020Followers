@@ -67,8 +67,10 @@ class fetchCandidateFollowers
 				candidates
 			WHERE
 				active = '1'
+				OR
+				active = '2'
             ORDER BY
-				rank
+				rank DESC
 		";
 
         $result = mysqli_query($this->_db, $sql);

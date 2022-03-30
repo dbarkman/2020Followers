@@ -5,10 +5,15 @@ session_start();
 require_once dirname(__FILE__) . '/includes/includes.php';
 
 if (count($argv) <= 1) {
-    echo 'Include an argument, either hour or day.' . "\n";
+    echo 'Include an argument, either hour, hours or day.' . "\n";
 } else {
+    $hours = '';
+    if (isset($argv[2])) {
+        $hours = $argv[2];
+    }
+
     $pfs = new postFollowerSummary();
-    $pfs->buildAndSendSummary($argv[1]);
+    $pfs->buildAndSendSummary($argv[1], $hours);
 }
 
 class postFollowerSummary
@@ -28,7 +33,7 @@ class postFollowerSummary
 		$this->_twitter = new Twitter($twitterCreds['consumerKey'], $twitterCreds['consumerSecret'], $twitterCreds['accessToken'], $twitterCreds['accessTokenSecret']);
 	}
 
-	public function buildAndSendSummary($time)
+	public function buildAndSendSummary($time, $hours)
     {
         $candidates = $this->getCandidates();
         $statusArray = array();
@@ -37,32 +42,36 @@ class postFollowerSummary
         foreach ($candidates as $candidate) {
             $rowCount++;
             $screenName = $candidate['screenName'];
-            $counts = $this->getFollowerChangeCount($screenName, $time);
+            $counts = $this->getFollowerChangeCount($screenName, $time, $hours);
             $followerCount = $counts[0];
             $lastCount = $counts[1];
 
             if ($time == 'day') {
-                $twitterUpdate .= '@' . $screenName;
+                $twitterUpdate .= '' . $screenName;
+            } else if ($time == 'hours') {
+                $twitterUpdate .= '' . $screenName;
+                $hours .= ' ';
             } else {
                 $twitterUpdate .= '' . $screenName;
             }
             if ($followerCount > $lastCount) {
                 $change = $followerCount - $lastCount;
                 $percentChange = ($change / $followerCount) * 100;
-                $twitterUpdate .= ' gained ' . number_format($change) . ' Twitter followers in the last ' . $time . ', for a ' . number_format($percentChange, 4) . '% increase,';
+                $twitterUpdate .= ' gained ' . number_format($change) . ' Twitter followers in the last ' . $hours . $time . ', for a ' . number_format($percentChange, 4) . '% increase,';
                 $twitterUpdate .= ' with a current count of ' . number_format($followerCount) . ' followers.' . PHP_EOL;
             } else if ($followerCount < $lastCount) {
                 $change = $lastCount - $followerCount;
                 $percentChange = ($change / $followerCount) * 100;
-                $twitterUpdate .= ' lost ' . number_format($change) . ' Twitter followers in the last ' . $time . ', for a ' . number_format($percentChange, 4) . '% decrease,';
+                $twitterUpdate .= ' lost ' . number_format($change) . ' Twitter followers in the last ' . $hours . $time . ', for a ' . number_format($percentChange, 4) . '% decrease,';
                 $twitterUpdate .= ' with a current count of ' . number_format($followerCount) . ' followers.' . PHP_EOL;
             } else if ($followerCount == $lastCount) {
-                $twitterUpdate .= ' remained at ' . number_format($followerCount) . ' Twitter followers for the last ' . $time . '.' . PHP_EOL;
+                $twitterUpdate .= ' remained at ' . number_format($followerCount) . ' Twitter followers for the last ' . $hours . $time . '.' . PHP_EOL;
             }
 
             $twitterUpdate .= '#2020election';
             array_push($statusArray, $twitterUpdate);
             $twitterUpdate = '';
+            $hours = trim($hours);
         }
 
         foreach ($statusArray as $status) {
@@ -81,7 +90,7 @@ class postFollowerSummary
 			WHERE
 				active = '1'
             ORDER BY
-				rank
+				rank DESC
 		";
 
         $result = mysqli_query($this->_db, $sql);
@@ -93,10 +102,11 @@ class postFollowerSummary
         return $rows;
     }
 
-    public function getFollowerChangeCount($screenName, $time)
+    public function getFollowerChangeCount($screenName, $time, $hours)
 	{
 	    $limit = 60;
-	    if ($time == 'day') $limit = 1440;
+        if ($time == 'hours') $limit = $limit * $hours;
+        if ($time == 'day') $limit = 1440;
 
         $sql = "
             SELECT
@@ -117,6 +127,7 @@ class postFollowerSummary
             array_push($rows, $row['followersCount']);
         }
         if ($time == 'day') return array($rows[0], $rows[1439]);
+        if ($time == 'hours') return array($rows[0], $rows[$limit - 1]);
         return array($rows[0], $rows[59]);
 	}
 
